@@ -3,10 +3,13 @@ library("dplyr")
 if(!dir.exists("../UCI_HAR_Dataset")){print("Data directoty  missing")
 }else{
     proj_dir <- getwd()
-    setwd("../UCI_HAR_Dataset/test")
     
-    features       <- read.delim("../features.txt",        header=F, sep="")
-    activity_lables<- read.delim("../activity_labels.txt", header=F, sep="")
+    
+    setwd("../UCI_HAR_Dataset")
+    features       <- read.delim("features.txt",        header=F, sep="")
+    activity_lables<- read.delim("activity_labels.txt", header=F, sep="")
+    
+    setwd("test")
     
     test_dir <- list.files(getwd())
     print(test_dir)
@@ -109,3 +112,4 @@ if(!dir.exists("../UCI_HAR_Dataset")){print("Data directoty  missing")
                 row.names=F, col.names=T)
     
 }
+
