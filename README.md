@@ -1,111 +1,133 @@
-#run_analysis.R
-library("dplyr")
-if(!dir.exists("../UCI_HAR_Dataset")){print("Data directoty  missing")
-}else{
-    proj_dir <- getwd()
-    setwd("../UCI_HAR_Dataset/test")
-    
-    features       <- read.delim("../features.txt",        header=F, sep="")
-    activity_lables<- read.delim("../activity_labels.txt", header=F, sep="")
-    
-    test_dir <- list.files(getwd())
-    print(test_dir)
-    
-    subject_test <- read.delim("subject_test.txt", header = F, sep = "")
-    colnames(subject_test) <- c("Subject")
-    
-    x_test <- read.delim("X_test.txt", header = F, sep = "")
-    colnames(x_test) <- features[,2]
-    
-    y_test <- read.delim("y_test.txt", header = F, sep = "")
-    y_test <- left_join(y_test,activity_lables, by="V1")[,2]
-    
-    setwd("Inertial Signals")
-    test_IS_dir <- list.files(getwd())
-    body_acc_x_test  <- read.delim("body_acc_x_test.txt", header=F,sep="")
-    body_acc_y_test  <- read.delim("body_acc_y_test.txt", header=F,sep="")
-    body_acc_z_test  <- read.delim("body_acc_z_test.txt", header=F,sep="")
-    body_gyro_x_test <- read.delim("body_gyro_x_test.txt",header=F,sep="")
-    body_gyro_y_test <- read.delim("body_gyro_y_test.txt",header=F,sep="")
-    body_gyro_z_test <- read.delim("body_gyro_z_test.txt",header=F,sep="")
-    total_acc_x_test <- read.delim("total_acc_x_test.txt",header=F,sep="")
-    total_acc_y_test <- read.delim("total_acc_y_test.txt",header=F,sep="")
-    total_acc_z_test <- read.delim("total_acc_z_test.txt",header=F,sep="")    
-    
-    test_df <- data.frame(subject  = subject_test,
-                          activity = y_test, 
-                          Type = rep("TEST",length(subject_test)),
-                          "X" = x_test,
-                          body_acc_x  = body_acc_x_test,  
-                          body_acc_y  = body_acc_y_test,  
-                          body_acc_z  = body_acc_z_test,
-                          body_gyro_x = body_gyro_x_test, 
-                          body_gyro_y = body_gyro_y_test, 
-                          body_gyro_z = body_gyro_z_test,
-                          total_acc_x = total_acc_x_test, 
-                          total_acc_y = total_acc_y_test, 
-                          total_acc_z = total_acc_z_test)
-    
-    setwd(proj_dir)
-    
-    setwd("../UCI_HAR_Dataset/train")
-    train_dir <- list.files(getwd())
-    print(train_dir)
-    subject_train <- read.delim("subject_train.txt", header = F, sep = "")
-    colnames(subject_train) <- c("Subject")
-    
-    x_train <- read.delim("X_train.txt", header = F, sep = "")
-    colnames(x_train) <- features[,2]
-    
-    y_train <- read.delim("y_train.txt", header = F, sep = "")
-    y_train <- left_join(y_train,activity_lables, by="V1")[,2]
-    
-    setwd("Inertial Signals")
-    train_IS_dir <- list.files(getwd())
-    body_acc_x_train <- read.delim("body_acc_x_train.txt", header=F,sep="")
-    body_acc_y_train <- read.delim("body_acc_y_train.txt", header=F,sep="")
-    body_acc_z_train <- read.delim("body_acc_z_train.txt", header=F,sep="")
-    body_gyro_x_train<- read.delim("body_gyro_x_train.txt",header=F,sep="")
-    body_gyro_y_train<- read.delim("body_gyro_y_train.txt",header=F,sep="")
-    body_gyro_z_train<- read.delim("body_gyro_z_train.txt",header=F,sep="")
-    total_acc_x_train<- read.delim("total_acc_x_train.txt",header=F,sep="")
-    total_acc_y_train<- read.delim("total_acc_y_train.txt",header=F,sep="")
-    total_acc_z_train<- read.delim("total_acc_z_train.txt",header=F,sep="") 
-    
-    train_df <- data.frame(subject  = subject_train,
-                           activity = y_train, 
-                           Type = rep("TRAIN",length(subject_train)),
-                           "X" = x_train,
-                           body_acc_x  = body_acc_x_train,  
-                           body_acc_y  = body_acc_y_train,  
-                           body_acc_z  = body_acc_z_train,
-                           body_gyro_x = body_gyro_x_train, 
-                           body_gyro_y = body_gyro_y_train, 
-                           body_gyro_z = body_gyro_z_train,
-                           total_acc_x = total_acc_x_train, 
-                           total_acc_y = total_acc_y_train, 
-                           total_acc_z = total_acc_z_train) 
-    
-    setwd(proj_dir)
-    
-    final_tbl <- rbind(test_df,train_df)
-    
-    colnames(final_tbl) <- colnames(final_tbl) %>% 
-        gsub(pattern = "^X\\.",replacement = "") %>%
-        gsub(pattern = "\\.\\.\\.",replacement = ".") %>%
-        gsub(pattern = "\\.\\.",replacement = ".")
-    
-    #write.table(final_tbl,"final_tbl.txt",row.names=F)
-    
-    final_tbl_sel <- tbl_df(select(final_tbl,contains
-                                   (c("subject","activity","Type","mean","std"))))
-    
-    final_tbl_average <- aggregate(final_tbl_sel[,4:89],
-                                   list(subject =final_tbl_sel$Subject,
-                                        activity=final_tbl_sel$activity,
-                                        category=final_tbl_sel$Type),mean)
-    
-    write.table(final_tbl_average,"final_tbl_average.txt",
-                row.names=F, col.names=T)
-    
-}
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Project on Getting and Cleaning Data Course 
+### by Rajasekar Chandrasekaran.
+### 
+This document contains all the details necessary to understand the data used and the R code written for the project on  Getting and Cleaning Data Course, of Johns Hopkins University in Coursera.
+
+The actual data for this project was extracted from the below link provided in coursera.
+
+https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip
+
+### Requirement: 
+
+R script should be created called run_analysis.R that does the following.
+
+* Merges the training and the test sets to create one data set.
+* Extracts only the measurements on the mean and standard deviation for each measurement.
+* Uses descriptive activity names to name the activities in the data set
+* Appropriately labels the data set with descriptive variable names.
+* From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+
+**Please refer to the comments in the run_analysis.R for more details on the Getting and Cleaning process.**
+
+Final output created by the code is table "final_tbl_average".
+Same has been witen out to a flat file names "final_tbl_average.txt"
+
+Below are the field extracted in the final output.
+
+ 1. subject (Contains the Subect identification)
+ 2. activity (Contains oe of the six activities)
+ 3. category (C)
+ 4. tBodyAcc.mean.X
+ 5. tBodyAcc.mean.Y
+ 6. tBodyAcc.mean.Z
+ 7. tGravityAcc.mean.X
+ 8. tGravityAcc.mean.Y
+ 9. tGravityAcc.mean.Z
+10. tBodyAccJerk.mean.X
+11. tBodyAccJerk.mean.Y
+12. tBodyAccJerk.mean.Z
+13. tBodyGyro.mean.X
+14. tBodyGyro.mean.Y
+15. tBodyGyro.mean.Z
+16. tBodyGyroJerk.mean.X
+17. tBodyGyroJerk.mean.Y
+18. tBodyGyroJerk.mean.Z
+19. tBodyAccMag.mean.
+20. tGravityAccMag.mean.
+21. tBodyAccJerkMag.mean.
+22. tBodyGyroMag.mean.
+23. tBodyGyroJerkMag.mean.
+24. fBodyAcc.mean.X
+25. fBodyAcc.mean.Y
+26. fBodyAcc.mean.Z
+27. fBodyAcc.meanFreq.X
+28. fBodyAcc.meanFreq.Y
+29. fBodyAcc.meanFreq.Z
+30. fBodyAccJerk.mean.X
+31. fBodyAccJerk.mean.Y
+32. fBodyAccJerk.mean.Z
+33. fBodyAccJerk.meanFreq.X
+34. fBodyAccJerk.meanFreq.Y
+35. fBodyAccJerk.meanFreq.Z
+36. fBodyGyro.mean.X
+37. fBodyGyro.mean.Y
+38. fBodyGyro.mean.Z
+39. fBodyGyro.meanFreq.X
+40. fBodyGyro.meanFreq.Y
+41. fBodyGyro.meanFreq.Z
+42. fBodyAccMag.mean.
+43. fBodyAccMag.meanFreq.
+44. fBodyBodyAccJerkMag.mean.
+45. fBodyBodyAccJerkMag.meanFreq.
+46. fBodyBodyGyroMag.mean.
+47. fBodyBodyGyroMag.meanFreq.
+48. fBodyBodyGyroJerkMag.mean.
+49. fBodyBodyGyroJerkMag.meanFreq.
+50. angle.tBodyAccMean.gravity.
+51. angle.tBodyAccJerkMean.gravityMean.
+52. angle.tBodyGyroMean.gravityMean.
+53. angle.tBodyGyroJerkMean.gravityMean."
+54. angle.X.gravityMean.
+55. angle.Y.gravityMean.
+56. angle.Z.gravityMean.
+57. tBodyAcc.std.X
+58. tBodyAcc.std.Y
+59. tBodyAcc.std.Z
+60. tGravityAcc.std.X
+61. tGravityAcc.std.Y
+62. tGravityAcc.std.Z
+63. tBodyAccJerk.std.X
+64. tBodyAccJerk.std.Y
+65. tBodyAccJerk.std.Z
+66. tBodyGyro.std.X
+67. tBodyGyro.std.Y
+68. tBodyGyro.std.Z
+69. tBodyGyroJerk.std.X
+70. tBodyGyroJerk.std.Y
+71. tBodyGyroJerk.std.Z
+72. tBodyAccMag.std.
+73. tGravityAccMag.std.
+74. tBodyAccJerkMag.std.
+75. tBodyGyroMag.std.
+76. tBodyGyroJerkMag.std.
+77. fBodyAcc.std.X
+78. fBodyAcc.std.Y
+79. fBodyAcc.std.Z
+80. fBodyAccJerk.std.X
+81. fBodyAccJerk.std.Y
+82. fBodyAccJerk.std.Z
+83. fBodyGyro.std.X
+84. fBodyGyro.std.Y
+85. fBodyGyro.std.Z
+86. fBodyAccMag.std.
+87. fBodyBodyAccJerkMag.std.
+88. fBodyBodyGyroMag.std.
+89. fBodyBodyGyroJerkMag.std.
+
+* Column 1 contains the Subect identification.  
+* Column 2 contains one of the six activities.  
+* Coulmn 3 contains  either of the two categories, TEST or TRAIN.  
+Below are Average columns calcualted by grouping based on above three columns.  
+* Columns  4 to 56 contains the average calculated for the measurements from the columns which are mean of the measurements.  
+* Columns 57 to 89 contains the average calculated for the measurements from the columns which are standard deviations of the measurements.  
+
+
+**Please refer to the comments in the run_analysis.R for more details on the Getting and Cleaning process.**
+
+
